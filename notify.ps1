@@ -66,6 +66,18 @@ if ($len -gt 0) {
 New-Item $pendingLock -ItemType File -Force | Out-Null
 
 # --- Send toast ---
+
+# Explicitly set AppUserModelID — required for toast from hidden/non-StartMenu processes
+Add-Type -Name TH2 -Namespace W32 @"
+using System;
+using System.Runtime.InteropServices;
+public class TH2 {
+    [DllImport("shell32.dll", SetLastError = true)]
+    public static extern void SetCurrentProcessExplicitAppUserModelID([MarshalAs(UnmanagedType.LPWStr)] string AppID);
+}
+"@
+[W32.TH2]::SetCurrentProcessExplicitAppUserModelID('ClaudeCode.Notifier')
+
 $toastXml = @"
 <toast activationType="protocol" launch="claude-focus://focus" duration="long">
   <visual>
