@@ -43,17 +43,17 @@ Claude Code hook 触发
 | `setup.ps1` | 一键安装：注册 claude-focus:// 协议 + 配置 Claude Code hooks |
 | `notify.ps1` | 发送 Windows Toast 通知（含前台检测、去重、开关判断） |
 | `focus-claude.ps1` | 查找并聚焦 Claude Code 终端窗口 |
-| `toggle.ps1` | 命令行开关通知 |
-| `toggle-notifier.vbs` | VBS 桥接脚本，桌面快捷方式通过它静默调用 toggle.ps1 |
 
 ## 开关通知
 
-桌面双击 `Claude通知开关` 快捷方式即可切换，右下角弹出 Toast 提示当前状态。
-
-也可以用命令行：
+在 `~/.claude/` 目录下存在 `notifier-disabled` 文件时，通知会静默跳过。手动创建或删除该文件即可开关：
 
 ```powershell
-powershell -File .\toggle.ps1   # 运行一次关闭，再运行开启
+# 关闭通知
+New-Item -Path "$env:USERPROFILE\.claude\notifier-disabled" -ItemType File -Force
+
+# 开启通知
+Remove-Item -Path "$env:USERPROFILE\.claude\notifier-disabled" -Force
 ```
 
 ## 卸载

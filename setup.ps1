@@ -1,5 +1,5 @@
 # Claude Code Notifier - One-click setup
-# Copies scripts to ~/.claude/, registers claude-focus:// protocol, configures hooks, creates desktop shortcut
+# Copies scripts to ~/.claude/, registers claude-focus:// protocol, configures hooks
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $claudeDir = "$env:USERPROFILE\.claude"
@@ -7,28 +7,22 @@ $claudeDir = "$env:USERPROFILE\.claude"
 # Source scripts (in the project directory)
 $srcNotify = Join-Path $scriptDir "notify.ps1"
 $srcFocus  = Join-Path $scriptDir "focus-claude.ps1"
-$srcTogglePs1 = Join-Path $scriptDir "toggle.ps1"
-$srcToggleVbs = Join-Path $scriptDir "toggle-notifier.vbs"
 
 # Destinations (in ~/.claude/)
-$destNotify    = Join-Path $claudeDir "notify.ps1"
-$destFocus     = Join-Path $claudeDir "focus-claude.ps1"
-$destTogglePs1 = Join-Path $claudeDir "toggle-notifier.ps1"
-$destToggleVbs = Join-Path $claudeDir "toggle-notifier.vbs"
-$vbsLauncher   = Join-Path $claudeDir "focus-claude.vbs"
+$destNotify  = Join-Path $claudeDir "notify.ps1"
+$destFocus   = Join-Path $claudeDir "focus-claude.ps1"
+$vbsLauncher = Join-Path $claudeDir "focus-claude.vbs"
 
 Write-Host "=== Claude Code Notifier Setup ==="
 
 # 1. Copy scripts to ~/.claude/
-Write-Host "[1/4] Copying scripts to ~/.claude/..."
-Copy-Item $srcNotify    $destNotify    -Force
-Copy-Item $srcFocus     $destFocus     -Force
-Copy-Item $srcTogglePs1 $destTogglePs1 -Force
-Copy-Item $srcToggleVbs $destToggleVbs -Force
-Write-Host "  notify.ps1, focus-claude.ps1, toggle-notifier.ps1, toggle-notifier.vbs copied"
+Write-Host "[1/3] Copying scripts to ~/.claude/..."
+Copy-Item $srcNotify $destNotify -Force
+Copy-Item $srcFocus  $destFocus  -Force
+Write-Host "  notify.ps1, focus-claude.ps1 copied"
 
 # 2. Create focus-claude.vbs (no console flash when toast is clicked)
-Write-Host "[2/4] Creating VBS launcher for protocol handler..."
+Write-Host "[2/3] Creating VBS launcher for protocol handler..."
 @"
 Dim shell : Set shell = CreateObject("WScript.Shell")
 shell.Run "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File """"$destFocus"""", 0, False
@@ -37,7 +31,7 @@ Set shell = Nothing
 Write-Host "  focus-claude.vbs created"
 
 # 3. Register claude-focus:// protocol -> wscript.exe (no console window)
-Write-Host "[3/4] Registering claude-focus:// protocol..."
+Write-Host "[3/3] Registering claude-focus:// protocol + configuring hooks..."
 $regPath = "HKCU:\SOFTWARE\Classes\claude-focus"
 New-Item -Path $regPath -Force | Out-Null
 Set-ItemProperty -Path $regPath -Name "(Default)" -Value "URL:Claude Focus Protocol" -Type String
@@ -48,7 +42,6 @@ Set-ItemProperty -Path $cmdPath -Name "(Default)" -Value "wscript.exe `"$vbsLaun
 Write-Host "  Protocol registered: claude-focus:// -> wscript -> focus-claude.vbs"
 
 # 4. Configure Claude Code hooks
-Write-Host "[4/4] Configuring Claude Code hooks..."
 $settingsPath = "$env:USERPROFILE\.claude\settings.json"
 if (Test-Path $settingsPath) {
     $settings = Get-Content $settingsPath -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -106,20 +99,7 @@ $settings.hooks.UserPromptSubmit = @(@{
 $settings | ConvertTo-Json -Depth 5 | Set-Content $settingsPath -Encoding UTF8
 Write-Host "  Hooks configured: Stop, PermissionRequest, Notification, UserPromptSubmit"
 
-# 5. Create desktop shortcut for toggle
-Write-Host ""
-Write-Host "Creating desktop shortcut for toggle..."
-$wsh = New-Object -ComObject WScript.Shell
-$shortcut = $wsh.CreateShortcut("$env:USERPROFILE\Desktop\Claude通知开关.lnk")
-$shortcut.TargetPath = "C:\Windows\System32\wscript.exe"
-$shortcut.Arguments = "`"$destToggleVbs`""
-$shortcut.IconLocation = "C:\Windows\System32\shell32.dll,14"
-$shortcut.Save()
-Write-Host "  Shortcut created: $env:USERPROFILE\Desktop\Claude通知开关.lnk"
-
 Write-Host ""
 Write-Host "=== Setup Complete ==="
-Write-Host "Usage:"
 Write-Host "  - Claude will now notify you on task completion or permission requests"
 Write-Host "  - Click the toast notification to jump back to Claude"
-Write-Host "  - Double-click 'Claude通知开关' on desktop to toggle notifications on/off"
