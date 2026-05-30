@@ -44,15 +44,16 @@ Claude Code hook 触发
 | `notify.ps1` | 发送 Windows Toast 通知（含前台检测、去重、开关判断） |
 | `focus-claude.ps1` | 查找并聚焦 Claude Code 终端窗口 |
 | `toggle.ps1` | 命令行开关通知 |
+| `toggle-notifier.vbs` | VBS 桥接脚本，桌面快捷方式通过它静默调用 toggle.ps1 |
 
 ## 开关通知
 
-```powershell
-# 关闭通知
-powershell -File .\toggle.ps1
+桌面双击 `Claude通知开关` 快捷方式即可切换，右下角弹出 Toast 提示当前状态。
 
-# 再次运行即开启
-powershell -File .\toggle.ps1
+也可以用命令行：
+
+```powershell
+powershell -File .\toggle.ps1   # 运行一次关闭，再运行开启
 ```
 
 ## 卸载

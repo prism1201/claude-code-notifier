@@ -3,10 +3,10 @@ $sentinel = "$env:USERPROFILE\.claude\notifier-disabled"
 
 if (Test-Path $sentinel) {
     Remove-Item $sentinel -Force
-    $state = "ON"
+    $state = "已开启"
 } else {
     New-Item $sentinel -ItemType File -Force | Out-Null
-    $state = "OFF"
+    $state = "已关闭"
 }
 
 # Show a quick toast to confirm the toggle
@@ -14,7 +14,7 @@ $toastXml = @"
 <toast duration="short">
   <visual>
     <binding template="ToastGeneric">
-      <text>Claude 通知已$state</text>
+      <text>Claude 通知$state</text>
     </binding>
   </visual>
 </toast>
