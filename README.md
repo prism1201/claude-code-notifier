@@ -11,8 +11,7 @@
 - **无闪窗** — 通过 VBS 桥接 + 自定义协议，激活过程不会闪现命令行窗口
 - **三种触发** — 覆盖 `Stop`（任务完成）、`PermissionRequest`（需要确认）、`Notification`（系统消息）
 - **智能跳过** — Claude 终端已在前台时不弹通知，避免干扰
-- **去重防骚扰** — 同一事件 5 秒内不重复弹通知
-- **一键开关** — 桌面快捷方式双击即可开关通知，无需输命令
+- **去重防骚扰** — 每次暂停仅弹一条通知，不会重复弹出
 
 ## 快速开始
 
@@ -44,14 +43,9 @@ Claude Code hook 触发
 | `setup.ps1` | 一键安装：注册 claude-focus:// 协议 + 配置 Claude Code hooks |
 | `notify.ps1` | 发送 Windows Toast 通知（含前台检测、去重、开关判断） |
 | `focus-claude.ps1` | 查找并聚焦 Claude Code 终端窗口 |
-| `focus-claude.vbs` | VBS 静默启动器（setup 自动生成，避免点击通知时闪窗） |
 | `toggle.ps1` | 命令行开关通知 |
 
 ## 开关通知
-
-桌面快捷方式 `Claude通知开关` 双击即可切换，Toast 提示当前状态，无命令行窗口。
-
-或通过命令行：
 
 ```powershell
 # 关闭通知
