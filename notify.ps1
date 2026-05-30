@@ -1,25 +1,23 @@
 param(
     [string]$Title = "Claude",
     [string]$Message = "",
-    [string]$EventType = ""
+    [string]$Action = "send"  # "send" or "clear"
 )
 
 $sentinel = "$env:USERPROFILE\.claude\notifier-disabled"
+$pendingLock = "$env:USERPROFILE\.claude\.notifier-pending"
+
+# --- Clear action: UserPromptSubmit calls this to reset the pending flag ---
+if ($Action -eq "clear") {
+    Remove-Item $pendingLock -Force -ErrorAction SilentlyContinue
+    exit 0
+}
 
 # --- Disabled check ---
 if (Test-Path $sentinel) { exit 0 }
 
-# --- Per-event-type dedup (same event suppressed within 10s) ---
-if ($EventType) {
-    $lockFile = "$env:USERPROFILE\.claude\.notifier-lock-$EventType"
-    try {
-        if (Test-Path $lockFile) {
-            $last = [datetime](Get-Content $lockFile -Raw).Trim()
-            if (((Get-Date) - $last).TotalSeconds -lt 10) { exit 0 }
-        }
-    } catch {}
-    Get-Date -Format o | Out-File $lockFile -Force
-}
+# --- Pending check: if a notification was already sent since last user input, skip ---
+if (Test-Path $pendingLock) { exit 0 }
 
 # --- Skip if a Claude terminal is already in foreground ---
 Add-Type @"
@@ -45,12 +43,9 @@ if ($len -gt 0) {
     if ($wpid -gt 0) {
         try {
             $fgProc = Get-Process -Id $wpid -ErrorAction Stop
-
             if ($fgProc.ProcessName -match 'WindowsTerminal|wt|cmd|powershell|pwsh|conhost') {
-                # Direct title match
                 if ($fgTitle -match 'claude|Claude Code|Claude') { exit 0 }
 
-                # Deep process tree check: any descendant has claude in command line
                 $claudeProcs = @(Get-WmiObject Win32_Process -Filter "Name LIKE '%node%' OR Name LIKE '%claude%'" -ErrorAction SilentlyContinue |
                     Where-Object { $_.CommandLine -match 'claude' })
                 foreach ($cp in $claudeProcs) {
@@ -66,6 +61,9 @@ if ($len -gt 0) {
         } catch {}
     }
 }
+
+# --- Set pending lock to prevent duplicate notifications for this pause ---
+New-Item $pendingLock -ItemType File -Force | Out-Null
 
 # --- Send toast ---
 $toastXml = @"
